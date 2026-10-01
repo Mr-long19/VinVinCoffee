@@ -11,12 +11,11 @@ try {
     $pdo = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_TIMEOUT            => 5,
     ]);
-} 
-    // In your db.php:
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Database Connection Failed: " . $e->getMessage()]);
-    exit;
+    // DO NOT set http_response_code(500) here, or Vercel will redirect to index.php homepage!
+    // Instead, create a dummy $pdo or log error so admin.php can render its UI card safely.
+    $db_connection_error = $e->getMessage();
 }
 ?>
