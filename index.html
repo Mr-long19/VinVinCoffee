@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en" class="h-screen overflow-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roast & Craft - Artisanal Coffee Shop | Ta Khmau</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..800;1,400..800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        espresso: '#1b1411',
+                        roast: '#2c1d11',
+                        caramel: '#8c5a3c',
+                        latte: '#cda880',
+                        foam: '#f7f4ef',
+                        cream: '#faf8f5',
+                        accent: '#d97706'
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .hero-bg {
+            background: linear-gradient(180deg, rgba(27, 20, 17, 0.75) 0%, rgba(27, 20, 17, 0.85) 100%), 
+                        url('https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=1600&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+        .wood-texture {
+            background-color: #f7f4ef;
+            background-image: radial-gradient(#cda880 0.5px, transparent 0.5px);
+            background-size: 16px 16px;
+        }
+    </style>
+</head>
+<body class="bg-cream text-espresso font-sans antialiased h-screen overflow-hidden flex flex-col selection:bg-latte selection:text-espresso">
+
+    <!-- Header Navigation (Fixed at top) -->
+    <header class="flex-shrink-0 bg-espresso/90 backdrop-blur-md border-b border-caramel/20 text-foam z-50" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="#" class="flex items-center gap-3 group">
+                    <div class="w-10 h-10 rounded-full bg-caramel/20 border border-latte/40 flex items-center justify-center text-latte group-hover:bg-caramel group-hover:text-foam transition-colors duration-300">
+                        <i class="fa-solid font-bold fa-mug-hot text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-serif text-2xl font-bold tracking-wide text-foam block leading-none">ROAST & CRAFT</span>
+                        <span class="text-[10px] tracking-widest text-latte uppercase block font-medium mt-1">Ta Khmau • Cambodia</span>
+                    </div>
+                </a>
+
+                <nav class="hidden md:flex items-center space-x-8 text-sm font-medium">
+                    <a href="#about" class="hover:text-latte transition-colors py-1">About Us</a>
+                    <a href="#menu" class="hover:text-latte transition-colors py-1">Menu</a>
+                    <a href="#delivery" class="hover:text-latte transition-colors py-1">Order Online</a>
+                    <a href="#location" class="hover:text-latte transition-colors py-1">Hours & Location</a>
+                    <a href="#gallery" class="hover:text-latte transition-colors py-1">Gallery</a>
+                </nav>
+
+                <div class="flex items-center gap-4">
+                    <button onclick="openModal()" class="hidden sm:inline-flex items-center justify-center px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-caramel text-foam hover:bg-latte hover:text-espresso transition-all duration-300 shadow-md">
+                        Reserve a Table
+                    </button>
+                    <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="md:hidden p-2 text-foam hover:text-latte focus:outline-none" aria-label="Toggle Menu">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-roast border-b border-caramel/20 px-4 pt-2 pb-6 space-y-3">
+            <a href="#about" onclick="toggleMobileMenu()" class="block py-2 text-foam hover:text-latte font-medium border-b border-espresso">About Us</a>
+            <a href="#menu" onclick="toggleMobileMenu()" class="block py-2 text-foam hover:text-latte font-medium border-b border-espresso">Menu</a>
+            <a href="#delivery" onclick="toggleMobileMenu()" class="block py-2 text-foam hover:text-latte font-medium border-b border-espresso">Order Online</a>
+            <a href="#location" onclick="toggleMobileMenu()" class="block py-2 text-foam hover:text-latte font-medium border-b border-espresso">Hours & Location</a>
+            <a href="#gallery" onclick="toggleMobileMenu()" class="block py-2 text-foam hover:text-latte font-medium border-b border-espresso">Gallery</a>
+            <button onclick="openModal(); toggleMobileMenu();" class="w-full mt-4 py-3 rounded-full text-xs font-semibold uppercase tracking-wider bg-caramel text-foam hover:bg-latte hover:text-espresso transition-colors">
+                Reserve a Table
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Internal Scrollable Container (No Page Scroll) -->
+    <main class="flex-1 overflow-y-auto">
+
+        <!-- Hero Section -->
+        <section class="relative min-h-[90vh] flex items-center justify-center hero-bg text-center text-foam px-4 sm:px-6">
+            <div class="max-w-3xl mx-auto py-20 flex flex-col items-center">
+                <span class="inline-block px-4 py-1.5 rounded-full bg-caramel/30 border border-latte/40 text-latte text-xs font-semibold tracking-wider uppercase mb-6 backdrop-blur-sm">
+                    <i class="fa-solid fa-location-dot mr-1.5"></i> Ta Khmau, Kandal / Phnom Penh
+                </span>
+                <h1 class="font-serif text-4xl sm:text-6xl font-bold tracking-tight text-foam mb-6 leading-tight">
+                    Artisanal Coffee & Handcrafted Brews
+                </h1>
+                <p class="text-lg sm:text-xl text-foam/80 mb-10 max-w-2xl font-light leading-relaxed">
+                    Experience exceptional Cambodian beans, specialty slow-bar pour-overs, and freshly baked pastries in a warm, welcoming community space.
+                </p>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
+                    <a href="#menu" class="w-full sm:w-auto px-8 py-4 rounded-full bg-caramel hover:bg-latte hover:text-espresso text-foam font-semibold text-sm transition-all duration-300 shadow-lg">
+                        Explore Menu <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                    </a>
+                    <a href="#location" class="w-full sm:w-auto px-8 py-4 rounded-full bg-foam/10 hover:bg-foam/20 text-foam border border-foam/30 font-semibold text-sm transition-all duration-300 backdrop-blur-sm">
+                        Find Us & Hours
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="about" class="py-24 wood-texture relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+                    <div class="relative">
+                        <div class="relative z-10 rounded-2xl overflow-hidden shadow-2xl border-4 border-foam">
+                            <img src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?q=80&w=1000&auto=format&fit=crop" alt="Barista preparing coffee" class="w-full h-96 sm:h-[480px] object-cover">
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-caramel font-semibold text-sm uppercase tracking-widest mb-3 block">Our Passion & Craft</span>
+                        <h2 class="font-serif text-3xl sm:text-4xl font-bold text-espresso mb-6 leading-tight">
+                            A Quiet Sanctuary for Coffee Lovers in Ta Khmau
+                        </h2>
+                        <p class="text-espresso/75 leading-relaxed mb-6">
+                            Located just a short drive from the bustling heart of Phnom Penh in charming Ta Khmau, <strong>Roast & Craft</strong> was founded with a simple mission: to celebrate the rich culture of Cambodian coffee while serving world-class artisanal espresso.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Menu Section -->
+        <section id="menu" class="py-24 bg-cream">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-12">
+                    <span class="text-caramel font-semibold text-sm uppercase tracking-widest mb-2 block">Delicious Offerings</span>
+                    <h2 class="font-serif text-3xl sm:text-4xl font-bold text-espresso mb-4">Our Handcrafted Menu</h2>
+                    <p class="text-espresso/70 text-sm sm:text-base">All espresso beverages are crafted with double shots of our signature house blend.</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6 mb-10">
+                    <div class="flex flex-wrap justify-center gap-2 bg-foam p-1.5 rounded-2xl border border-caramel/20 w-full md:w-auto">
+                        <button onclick="filterMenu('all', this)" class="menu-tab px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-caramel text-foam">All Items</button>
+                        <button onclick="filterMenu('coffee', this)" class="menu-tab px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-espresso hover:bg-caramel/10">Espresso & Coffee</button>
+                        <button onclick="filterMenu('non-coffee', this)" class="menu-tab px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-espresso hover:bg-caramel/10">Teas & Non-Coffee</button>
+                        <button onclick="filterMenu('bakery', this)" class="menu-tab px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-espresso hover:bg-caramel/10">Pastries & Snacks</button>
+                    </div>
+
+                    <div class="relative w-full md:w-72">
+                        <input type="text" id="menu-search" onkeyup="searchMenu()" placeholder="Search menu..." class="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-foam border border-caramel/20 text-sm text-espresso focus:outline-none focus:border-caramel">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-espresso/40 text-sm"></i>
+                    </div>
+                </div>
+
+                <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                <div id="no-results" class="hidden text-center py-12">
+                    <i class="fa-solid fa-mug-saucer text-4xl text-caramel/40 mb-3"></i>
+                    <p class="text-espresso/60 font-medium">No items match your search.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Order Online & Delivery Section -->
+        <section id="delivery" class="py-20 bg-roast text-foam relative overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="bg-espresso/80 border border-caramel/30 rounded-3xl p-8 sm:p-12 backdrop-blur-md shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8">
+                    <div class="max-w-xl text-center lg:text-left">
+                        <span class="inline-block px-3 py-1 rounded-full bg-caramel/30 text-latte text-xs font-semibold uppercase tracking-wider mb-4">
+                            <i class="fa-solid fa-motorcycle mr-1.5"></i> Fast Delivery To Your Door
+                        </span>
+                        <h2 class="font-serif text-3xl sm:text-4xl font-bold mb-4">Craving Coffee at Home or Work?</h2>
+                        <p class="text-foam/80 text-sm sm:text-base leading-relaxed">
+                            We deliver fresh brews and hot pastries directly across Ta Khmau and Southern Phnom Penh through your favorite local delivery apps.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap sm:flex-nowrap justify-center gap-4 w-full lg:w-auto">
+                        <a href="https://food.grab.com" target="_blank" class="flex-1 sm:flex-initial flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all shadow-md">
+                            <i class="fa-solid fa-bag-shopping text-xl"></i>
+                            <span>GrabFood</span>
+                        </a>
+                        <a href="https://www.foodpanda.com.kh" target="_blank" class="flex-1 sm:flex-initial flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-pink-600 hover:bg-pink-500 text-white font-bold text-sm transition-all shadow-md">
+                            <i class="fa-solid fa-utensils text-xl"></i>
+                            <span>Foodpanda</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hours & Location Section -->
+        <section id="location" class="py-24 wood-texture">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                    <div class="lg:col-span-5 space-y-6">
+                        <div>
+                            <span class="text-caramel font-semibold text-sm uppercase tracking-widest mb-2 block">Visit Our Cafe</span>
+                            <h2 class="font-serif text-3xl sm:text-4xl font-bold text-espresso mb-6">Opening Hours & Location</h2>
+                        </div>
+                        <div class="bg-foam p-6 rounded-2xl border border-caramel/20 shadow-sm">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-full bg-caramel/10 text-caramel flex items-center justify-center">
+                                    <i class="fa-regular fa-clock text-lg"></i>
+                                </div>
+                                <h3 class="font-serif text-xl font-bold text-espresso">Business Hours</h3>
+                            </div>
+                            <ul class="space-y-3 text-sm text-espresso/80">
+                                <li class="flex justify-between py-1 border-b border-caramel/10">
+                                    <span>Monday – Friday</span>
+                                    <span class="font-semibold text-espresso">7:00 AM – 7:30 PM</span>
+                                </li>
+                                <li class="flex justify-between py-1 border-b border-caramel/10">
+                                    <span>Saturday – Sunday</span>
+                                    <span class="font-semibold text-espresso">7:00 AM – 8:30 PM</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-7 h-full min-h-[400px] rounded-3xl overflow-hidden shadow-xl border-4 border-foam relative">
+                        <iframe 
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31281.85966385493!2d104.9312108!3d11.4828135!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31095116e04d4f4d%3A0x8670b865bd20c52a!2sTa%20Khmau!5e0!3m2!1sen!2skh!4v1700000000000!5m2!1sen!2skh" 
+                            class="w-full h-full min-h-[420px] border-0" 
+                            allowfullscreen="" 
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gallery & Testimonials Section -->
+        <section id="gallery" class="py-24 bg-cream">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-16">
+                    <span class="text-caramel font-semibold text-sm uppercase tracking-widest mb-2 block">Moments & Vibe</span>
+                    <h2 class="font-serif text-3xl sm:text-4xl font-bold text-espresso mb-4">Captured Atmosphere</h2>
+                    <p class="text-espresso/70 text-sm sm:text-base">Take a glance at our crafted drinks, freshly baked goods, and cozy seating area.</p>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
+                    <div class="relative group overflow-hidden rounded-2xl h-64 shadow-md">
+                        <img src="https://images.unsplash.com/photo-1511920170033-f8396924c348?q=80&w=600&auto=format&fit=crop" alt="Coffee beans" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="relative group overflow-hidden rounded-2xl h-64 shadow-md">
+                        <img src="https://images.unsplash.com/photo-1517256064527-09c73fc73e38?q=80&w=600&auto=format&fit=crop" alt="Pour over coffee" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="relative group overflow-hidden rounded-2xl h-64 shadow-md">
+                        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=600&auto=format&fit=crop" alt="Cozy Cafe interior" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="relative group overflow-hidden rounded-2xl h-64 shadow-md">
+                        <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=600&auto=format&fit=crop" alt="Croissants" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Reservation Modal -->
+    <div id="reservation-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-espresso/80 backdrop-blur-sm">
+        <div class="bg-cream border border-caramel/30 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative">
+            <button onclick="closeModal()" class="absolute top-5 right-5 text-espresso/60 hover:text-espresso p-2">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div class="text-center mb-6">
+                <h3 class="font-serif text-2xl font-bold text-espresso">Table / Pickup Inquiry</h3>
+            </div>
+            <form id="reservation-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-espresso/70 mb-1">Full Name</label>
+                    <input type="text" required placeholder="Your name" class="w-full px-4 py-2.5 rounded-xl bg-foam border border-caramel/20 text-sm focus:outline-none focus:border-caramel">
+                </div>
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-caramel hover:bg-roast text-foam font-bold text-sm transition-colors shadow-md">Submit Request</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Chatbot Toggle Button -->
+    <button onclick="toggleChat()" class="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-caramel text-foam flex items-center justify-center shadow-2xl hover:scale-105 transition-all">
+        <i class="fa-solid fa-robot text-2xl"></i>
+    </button>
+
+    <!-- Floating Chat Window -->
+    <div id="chat-window" class="fixed bottom-24 right-6 z-40 w-80 sm:w-96 bg-cream border border-caramel/30 rounded-2xl shadow-2xl hidden flex-col overflow-hidden">
+        <div class="bg-espresso p-4 text-foam flex justify-between items-center border-b border-caramel/30">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-caramel/20 text-latte flex items-center justify-center border border-latte/30">
+                    <i class="fa-solid fa-mug-hot text-sm"></i>
+                </div>
+                <div>
+                    <h4 class="font-serif font-bold text-sm leading-none">AI Barista</h4>
+                    <span class="text-[10px] text-latte">Online • Ask me anything!</span>
+                </div>
+            </div>
+            <button onclick="toggleChat()" class="text-foam/60 hover:text-foam p-1"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="chat-messages" class="p-4 h-64 overflow-y-auto space-y-3 bg-foam text-sm">
+            <div class="bg-cream border border-caramel/20 p-3 rounded-xl max-w-[85%] text-espresso">
+                Hello! ☕ How can I help you today? Ask me about our menu, Wi-Fi, category, or location!
+            </div>
+        </div>
+        <form onsubmit="handleChatSubmit(event)" class="p-3 bg-cream border-t border-caramel/20 flex gap-2">
+            <input type="text" id="chat-input" placeholder="Type a message..." class="flex-1 px-4 py-2 rounded-xl bg-foam border border-caramel/20 text-xs text-espresso focus:outline-none focus:border-caramel">
+            <button type="submit" class="w-9 h-9 rounded-xl bg-caramel text-foam flex items-center justify-center hover:bg-roast transition-colors">
+                <i class="fa-solid fa-paper-plane text-xs"></i>
+            </button>
+        </form>
+    </div>
+
+    <!-- Script Integration -->
+    <script>
+        let allMenuItems = [];
+
+        async function loadMenuItems() {
+            try {
+                const response = await fetch('http://localhost:8000/api.php?action=get_menu');
+                const result = await response.json();
+                if (result.status === 'success') {
+                    allMenuItems = result.data;
+                    renderMenuItems(allMenuItems);
+                }
+            } catch (error) {
+                console.error("Failed to fetch menu:", error);
+            }
+        }
+
+        function renderMenuItems(items) {
+            const grid = document.getElementById('menu-grid');
+            const noResults = document.getElementById('no-results');
+            grid.innerHTML = '';
+            if (items.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            } else {
+                noResults.classList.add('hidden');
+            }
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-foam p-5 rounded-2xl border border-caramel/20 shadow-sm flex gap-4 items-start";
+                card.innerHTML = `
+                    <img src="${item.image_url || 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=400'}" class="w-20 h-20 rounded-xl object-cover border flex-shrink-0">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-serif font-bold text-base text-espresso truncate">${item.name}</h3>
+                        <p class="text-xs text-espresso/70 mt-1 line-clamp-2">${item.description || ''}</p>
+                        <div class="mt-3 flex items-center justify-between border-t border-caramel/10 pt-2">
+                            <span class="font-bold text-sm text-caramel">$${parseFloat(item.price_usd).toFixed(2)}</span>
+                            <span class="text-[11px] font-medium text-espresso/60">${item.price_khr}</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterMenu(category, btn) {
+            document.querySelectorAll('.menu-tab').forEach(t => {
+                t.className = "menu-tab px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-espresso hover:bg-caramel/10";
+            });
+            if(btn) btn.className = "menu-tab px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-caramel text-foam";
+            if (category === 'all') {
+                renderMenuItems(allMenuItems);
+            } else {
+                renderMenuItems(allMenuItems.filter(i => i.category_slug === category));
+            }
+        }
+
+        function searchMenu() {
+            const query = document.getElementById('menu-search').value.toLowerCase();
+            renderMenuItems(allMenuItems.filter(i => i.name.toLowerCase().includes(query)));
+        }
+
+        async function handleChatSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+            appendChatMessage(message, 'user');
+            input.value = '';
+            const botReply = await generateBotReply(message);
+            appendChatMessage(botReply, 'bot');
+        }
+
+        function appendChatMessage(text, sender) {
+            const container = document.getElementById('chat-messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = sender === 'user' ? "bg-caramel text-foam p-3 rounded-xl max-w-[85%] ml-auto text-xs leading-relaxed" : "bg-cream border border-caramel/20 p-3 rounded-xl max-w-[85%] text-espresso text-xs leading-relaxed";
+            msgDiv.innerHTML = text;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function generateBotReply(userMsg) {
+            const lower = userMsg.toLowerCase();
+            try {
+                const [contextRes, menuRes] = await Promise.all([
+                    fetch('http://localhost:8000/api.php?action=get_ai_context'),
+                    fetch('http://localhost:8000/api.php?action=get_menu')
+                ]);
+                const contextData = await contextRes.json();
+                const menuData = await menuRes.json();
+                const docs = contextData.status === 'success' ? contextData.context : [];
+                const items = menuData.status === 'success' ? menuData.data : [];
+
+                for (const doc of docs) {
+                    const title = (doc.title || "").toLowerCase();
+                    const content = (doc.content || "").toLowerCase();
+                    if (
+                        ((lower.includes('wifi') || lower.includes('wi-fi')) && (title.includes('wifi') || content.includes('wifi'))) ||
+                        ((lower.includes('category') || lower.includes('categories')) && (title.includes('category') || title.includes('menu'))) ||
+                        ((lower.includes('location') || lower.includes('address') || lower.includes('hour')) && (title.includes('location') || title.includes('hour'))) ||
+                        ((lower.includes('recommend') || lower.includes('popular')) && (title.includes('popular') || title.includes('recommend')))
+                    ) {
+                        return `<strong>${doc.title}</strong><br>${doc.content}`;
+                    }
+                }
+
+                const matchedItem = items.find(item => item.name.toLowerCase().includes(lower));
+                if (matchedItem) {
+                    return `<strong>${matchedItem.name}</strong> is available for <strong>$${parseFloat(matchedItem.price_usd).toFixed(2)} (${matchedItem.price_khr})</strong>.`;
+                }
+            } catch (err) {
+                console.error("AI Barista fetch error:", err);
+            }
+            return "Thanks for reaching out! Our team is available on site in Ta Khmau or via phone at +855 12 345 678.";
+        }
+
+        function toggleChat() {
+            const chatWin = document.getElementById('chat-window');
+            chatWin.classList.toggle('hidden');
+            chatWin.classList.toggle('flex');
+        }
+
+        function openModal() {
+            document.getElementById('reservation-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('reservation-modal').classList.add('hidden');
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            alert("Thank you! Your inquiry has been submitted.");
+            closeModal();
+        }
+
+        window.addEventListener('DOMContentLoaded', loadMenuItems);
+    </script>
+</body>
+</html>
