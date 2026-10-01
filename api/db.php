@@ -1,9 +1,13 @@
 <?php
-$host     = getenv('POSTGRES_HOST')     ?: 'dpg-dauu9b19fdbs73advpe0-a.virginia-postgres.render.com';
-$port     = getenv('POSTGRES_PORT')     ?: '5432';
-$dbname   = getenv('POSTGRES_DATABASE') ?: 'coffee_riom';
-$user     = getenv('POSTGRES_USER')     ?: 'coffee_riom_user';
-$password = getenv('POSTGRES_PASSWORD') ?: 'g3Hmf2rt9Y50LopE1BEWB9Yppd5oFO8P';
+putenv("PGSSLMODE=require");
+$_ENV['PGSSLMODE'] = 'require';
+
+// Retrieve credentials from environment or Neon fallbacks
+$host     = getenv('POSTGRES_HOST')     ?: getenv('DB_HOST')     ?: 'YOUR_NEON_POOLER_HOST';
+$port     = getenv('POSTGRES_PORT')     ?: getenv('DB_PORT')     ?: '5432';
+$dbname   = getenv('POSTGRES_DATABASE') ?: getenv('DB_NAME')     ?: 'neondb';
+$user     = getenv('POSTGRES_USER')     ?: getenv('DB_USER')     ?: 'YOUR_NEON_USER';
+$password = getenv('POSTGRES_PASSWORD') ?: getenv('DB_PASS')     ?: 'YOUR_NEON_PASSWORD';
 
 $dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode=require";
 
@@ -14,6 +18,6 @@ try {
         PDO::ATTR_TIMEOUT            => 5,
     ]);
 } catch (PDOException $e) {
-    $db_connection_error = "Database Connection Failed: " . $e->getMessage();
+    $db_connection_error = $e->getMessage();
 }
 ?>
