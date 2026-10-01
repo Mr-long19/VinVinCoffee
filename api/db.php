@@ -1,16 +1,10 @@
 <?php
-// Force SSL mode for libpq
-putenv("PGSSLMODE=require");
-$_ENV['PGSSLMODE'] = 'require';
+$host     = getenv('POSTGRES_HOST')     ?: 'dpg-dauu9b19fdbs73advpe0-a.virginia-postgres.render.com';
+$port     = getenv('POSTGRES_PORT')     ?: '5432';
+$dbname   = getenv('POSTGRES_DATABASE') ?: 'coffee_riom';
+$user     = getenv('POSTGRES_USER')     ?: 'coffee_riom_user';
+$password = getenv('POSTGRES_PASSWORD') ?: 'g3Hmf2rt9Y50LopE1BEWB9Yppd5oFO8P';
 
-// Neon Direct Connection Credentials (no pooler suffix)
-$host     = getenv('POSTGRES_HOST')     ?: getenv('DB_HOST')     ?: 'ep-quiet-night-b5oa8gm9.c-7.us-east-2.aws.neon.tech';
-$port     = getenv('POSTGRES_PORT')     ?: getenv('DB_PORT')     ?: '5432';
-$dbname   = getenv('POSTGRES_DATABASE') ?: getenv('DB_NAME')     ?: 'neondb';
-$user     = getenv('POSTGRES_USER')     ?: getenv('DB_USER')     ?: 'neondb_owner';
-$password = getenv('POSTGRES_PASSWORD') ?: getenv('DB_PASS')     ?: 'YOUR_ACTUAL_NEON_PASSWORD';
-
-// Standard DSN with SSL mode
 $dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode=require";
 
 try {
@@ -20,6 +14,6 @@ try {
         PDO::ATTR_TIMEOUT            => 5,
     ]);
 } catch (PDOException $e) {
-    $db_connection_error = $e->getMessage();
+    $db_connection_error = "Database Connection Failed: " . $e->getMessage();
 }
 ?>
