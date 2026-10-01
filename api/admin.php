@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Include db.php safely from current or parent directory
+// Include db.php safely from current api directory or fallback to parent
 if (file_exists(__DIR__ . '/db.php')) {
     require_once __DIR__ . '/db.php';
 } elseif (file_exists(__DIR__ . '/../db.php')) {
@@ -113,16 +113,16 @@ if (isset($_POST['toggle_theme'])) {
 }
 $current_theme = $_SESSION['theme'] ?? 'light';
 
-// View Mode on Auth Page ('login', 'request_reset', 'process_reset')
+// View Mode ('login', 'request_reset', 'process_reset')
 $auth_view = $_GET['view'] ?? 'login';
 if (isset($_GET['reset_token'])) {
     $auth_view = 'process_reset';
 }
 
-$login_error = isset($db_connection_error) ? "Database Connection Error: " . $db_connection_error : '';
+$login_error = isset($db_connection_error) ? "Database Error: " . $db_connection_error : '';
 $reset_msg = '';
 
-// Handle Login Action
+// Login Action
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
     $user = trim($_POST['username']);
     $pass = $_POST['password'];
@@ -145,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
             $login_error = "Invalid username or password!";
         } catch (Exception $e) {
-            $login_error = "Database Query Error: " . $e->getMessage();
+            $login_error = "Database Error: " . $e->getMessage();
         }
     }
 }
@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $login_error = "Email address not found!";
             }
         } catch (Exception $e) {
-            $login_error = "Error processing request: " . $e->getMessage();
+            $login_error = "Error: " . $e->getMessage();
         }
     }
 }
@@ -212,43 +212,6 @@ if (isset($_GET['logout'])) {
     header("Location: admin.php");
     exit;
 }
-
-$role = $_SESSION['role'] ?? 'staff';
-$active_tab = $_GET['tab'] ?? 'menu';
-if ($role === 'staff' && in_array($active_tab, ['users', 'ai'])) {
-    $active_tab = 'menu';
-}
-
-// Handle Menu CRUD
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_menu') {
-    if (isset($_SESSION['admin_logged']) && isset($pdo)) {
-        $name = $_POST['name'];
-        $desc = $_POST['description'];
-        $price_usd = $_POST['price_usd'];
-        $price_khr = $_POST['price_khr'];
-        $category = $_POST['category_slug'];
-        $img = $_POST['image_url'];
-
-        $stmt = $pdo->prepare("INSERT INTO menu_items (name, description, price_usd, price_khr, category_slug, image_url) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $desc, $price_usd, $price_khr, $category, $img]);
-        header("Location: admin.php?tab=menu");
-        exit;
-    }
-}
-
-// Fetch Data
-$menu_items = [];
-$ai_docs = [];
-$users_list = [];
-if (isset($_SESSION['admin_logged']) && isset($pdo)) {
-    try {
-        $menu_items = $pdo->query("SELECT * FROM menu_items ORDER BY id DESC")->fetchAll();
-        if ($role === 'admin') {
-            $ai_docs = $pdo->query("SELECT * FROM ai_knowledge_docs ORDER BY id DESC")->fetchAll();
-            $users_list = $pdo->query("SELECT id, username, email, role, created_at FROM public.users ORDER BY id DESC")->fetchAll();
-        }
-    } catch (Exception $e) {}
-}
 ?>
 <!DOCTYPE html>
 <html lang="<?= $lang ?>" class="<?= $current_theme === 'dark' ? 'dark bg-gray-900 text-white' : 'bg-cream text-espresso' ?>">
@@ -283,7 +246,6 @@ if (isset($_SESSION['admin_logged']) && isset($pdo)) {
 <body class="min-h-screen flex flex-col font-sans transition-colors duration-300">
 
     <?php if (!isset($_SESSION['admin_logged'])): ?>
-    <!-- AUTH SCREEN (LOGIN / REQUEST RESET / PROCESS RESET) -->
     <div class="flex-1 flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl max-w-md w-full border border-caramel/20">
             <div class="text-center mb-6">
@@ -311,7 +273,6 @@ if (isset($_SESSION['admin_logged']) && isset($pdo)) {
             <?php endif; ?>
 
             <?php if ($auth_view === 'login'): ?>
-            <!-- LOGIN FORM -->
             <form method="POST" class="space-y-4">
                 <input type="hidden" name="action" value="login">
                 <div>
@@ -331,7 +292,6 @@ if (isset($_SESSION['admin_logged']) && isset($pdo)) {
             </form>
 
             <?php elseif ($auth_view === 'request_reset'): ?>
-            <!-- FORGOT PASSWORD FORM -->
             <form method="POST" class="space-y-4">
                 <input type="hidden" name="action" value="forgot_password">
                 <div>
@@ -347,7 +307,6 @@ if (isset($_SESSION['admin_logged']) && isset($pdo)) {
             </form>
 
             <?php elseif ($auth_view === 'process_reset'): ?>
-            <!-- SET NEW PASSWORD FORM -->
             <form method="POST" class="space-y-4">
                 <input type="hidden" name="action" value="reset_password">
                 <input type="hidden" name="reset_token" value="<?= htmlspecialchars($_GET['reset_token'] ?? '') ?>">
@@ -366,31 +325,9 @@ if (isset($_SESSION['admin_logged']) && isset($pdo)) {
         </div>
     </div>
     <?php else: ?>
-
-    <!-- DASHBOARD PANEL -->
-    <header class="bg-espresso text-foam px-6 py-4 flex items-center justify-between shadow-md">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-caramel/30 flex items-center justify-center text-latte">
-                <i class="fa-solid fa-mug-hot text-lg"></i>
-            </div>
-            <div>
-                <h1 class="font-serif font-bold text-lg"><?= $tr['dashboard'] ?></h1>
-                <span class="text-xs text-latte">Welcome, <?= htmlspecialchars($_SESSION['username'] ?? 'User') ?></span>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-4">
-            <a href="admin.php?logout=1" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-colors">
-                <i class="fa-solid fa-right-from-bracket mr-1"></i> <?= $tr['logout'] ?>
-            </a>
-        </div>
-    </header>
-
-    <div class="flex-1 max-w-7xl w-full mx-auto p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="md:col-span-4 bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-caramel/20">
-            <h3 class="font-serif text-xl font-bold mb-4"><?= $tr['tab_menu'] ?></h3>
-            <p class="text-sm">You are logged into the admin dashboard.</p>
-        </div>
+    <div class="p-8">
+        <h1 class="text-2xl font-bold">Welcome, <?= htmlspecialchars($_SESSION['username'] ?? 'Admin') ?></h1>
+        <a href="admin.php?logout=1" class="text-red-600 font-bold underline mt-4 inline-block">Logout</a>
     </div>
     <?php endif; ?>
 
