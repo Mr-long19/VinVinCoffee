@@ -1,33 +1,24 @@
 <?php
-// Set environment variable to mandate SSL mode globally
+// Set environment runtime variable to force libpq to send TLS SNI headers
 putenv("PGSSLMODE=require");
 $_ENV['PGSSLMODE'] = 'require';
 
-// Render external connection string (supports full SNI routing)
-$db_url = getenv('DATABASE_URL') 
-    ?: getenv('POSTGRES_URL') 
-    ?: "postgresql://coffee_riom_user:g3Hmf2rt9Y50LopE1BEWB9Yppd5oFO8P@dpg-dauu9b19fdbs73advpe0-a.virginia-postgres.render.com/coffee_riom?sslmode=require";
+// Retrieve database credentials
+$host     = getenv('POSTGRES_HOST')     ?: getenv('DB_HOST')     ?: 'dpg-dauu9b19fdbs73advpe0-a.virginia-postgres.render.com';
+$port     = getenv('POSTGRES_PORT')     ?: getenv('DB_PORT')     ?: '5432';
+$dbname   = getenv('POSTGRES_DATABASE') ?: getenv('DB_NAME')     ?: 'coffee_riom';
+$user     = getenv('POSTGRES_USER')     ?: getenv('DB_USER')     ?: 'coffee_riom_user';
+$password = getenv('POSTGRES_PASSWORD') ?: getenv('DB_PASS')     ?: 'g3Hmf2rt9Y50LopE1BEWB9Yppd5oFO8P';
 
-// Convert postgresql:// URI format into PDO-compatible libpq DSN format
-if (strpos($db_url, 'postgresql://') === 0 || strpos($db_url, 'postgres://') === 0) {
-    $parsed = parse_url($db_url);
-    $host = $parsed['host'] ?? '';
-    $port = $parsed['port'] ?? 5432;
-    $dbname = ltrim($parsed['path'] ?? '', '/');
-    $user = $parsed['user'] ?? '';
-    $password = $parsed['pass'] ?? '';
-
-    // libpq key-value connection string format ensures full SNI pass-through
-    $dsn = "pgsql:host={$host} port={$port} dbname={$dbname} sslmode=require";
-} else {
-    $dsn = $db_url;
-}
+// Standard DSN with sslmode=require
+$dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode=require";
 
 try {
-    $pdo = new PDO($dsn, $user ?? null, $password ?? null, [
+    $pdo = new PDO($dsn, $user, $password, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_TIMEOUT            => 5,
+        PDO::PGSQL_ATTR_SSL_MODE     => PDO::PGSQL_CONNECTION_REQUIRE,
     ]);
 } catch (PDOException $e) {
     // Graceful error capture for admin UI rendering
