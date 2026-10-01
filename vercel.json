@@ -1,6 +1,9 @@
 {
   "functions": {
-    "*.php": {
+    "api.php": {
+      "runtime": "vercel-php@0.7.2"
+    },
+    "admin.php": {
       "runtime": "vercel-php@0.7.2"
     }
   },
@@ -15,7 +18,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/coffee_shop_website.html"
+      "dest": "/index.html"
     }
   ]
 }
