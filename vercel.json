@@ -1,19 +1,12 @@
 {
-  "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/**/*.php",
-      "use": "@vercel/php"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/admin.php(.*)",
-      "dest": "/api/admin.php$1"
+      "source": "/admin.php",
+      "destination": "/api/admin.php"
     },
     {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "source": "/admin",
+      "destination": "/api/admin.php"
     }
   ]
 }
