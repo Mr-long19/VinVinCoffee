@@ -1,8 +1,11 @@
 <?php
 session_start();
-// Adjust path to db.php if located in an includes folder or root directory
+
+// Adjust path to db.php if located in an includes folder, api folder, or root directory
 if (file_exists('includes/db.php')) {
     require_once 'includes/db.php';
+} elseif (file_exists('api/db.php')) {
+    require_once 'api/db.php';
 } else {
     require_once 'db.php';
 }
@@ -21,11 +24,14 @@ $t = [
         'logout' => 'Logout',
         'login_title' => 'Admin & Staff Login',
         'username' => 'Username',
+        'email' => 'Email Address',
         'password' => 'Password',
         'login_btn' => 'Sign In',
         'reset_link' => 'Forgot Password? Reset Here',
-        'reset_title' => 'Reset Password',
+        'reset_title' => 'Reset Password Request',
+        'reset_pass_title' => 'Enter New Password',
         'new_password' => 'New Password',
+        'request_reset_btn' => 'Send Reset Link',
         'reset_btn' => 'Update Password',
         'back_to_login' => 'Back to Login',
         'tab_menu' => 'Menu Items',
@@ -38,7 +44,6 @@ $t = [
         'light' => 'Light Mode',
         'dark' => 'Dark Mode',
         'unauthorized' => 'Access Denied: You do not have permission to view this section.',
-        // New Settings translations
         'settings_header' => 'System & Store Configuration',
         'settings_sub' => 'Manage your coffee shop profile, operational preferences, dual-currency exchange rates, and AI assistant behavior.',
         'sec_general' => 'Store Profile & Identity',
@@ -61,11 +66,14 @@ $t = [
         'logout' => 'ចាកចេញ',
         'login_title' => 'ចូលគណនីរដ្ឋបាល និងបុគ្គលិក',
         'username' => 'ឈ្មោះអ្នកប្រើប្រាស់',
+        'email' => 'អ៊ីមែល',
         'password' => 'ពាក្យសម្ងាត់',
         'login_btn' => 'ចូលគណនី',
         'reset_link' => 'ភ្លេចពាក្យសម្ងាត់? កំណត់ឡើងវិញ',
-        'reset_title' => 'កំណត់ពាក្យសម្ងាត់ឡើងវិញ',
+        'reset_title' => 'ស្នើសុំកំណត់ពាក្យសម្ងាត់ឡើងវិញ',
+        'reset_pass_title' => 'បញ្ចូលពាក្យសម្ងាត់ថ្មី',
         'new_password' => 'ពាក្យសម្ងាត់ថ្មី',
+        'request_reset_btn' => 'ផ្ញើតំណភ្ជាប់កំណត់ឡើងវិញ',
         'reset_btn' => 'ប្តូរពាក្យសម្ងាត់',
         'back_to_login' => 'ត្រឡប់ទៅការចូល',
         'tab_menu' => 'មុខម្ហូប',
@@ -78,7 +86,6 @@ $t = [
         'light' => 'ពណ៌ភ្លឺ',
         'dark' => 'ពណ៌ងងឹត',
         'unauthorized' => 'ការចូលត្រូវបានបដិសេធ៖ អ្នកមិនមានសិទ្ធិមើលផ្នែកនេះទេ។',
-        // New Settings translations
         'settings_header' => 'ការកំណត់ប្រព័ន្ធ និងហាងកាហ្វេ',
         'settings_sub' => 'គ្រប់គ្រងព័ត៌មានហាង ម៉ោងបើក-បិទ អត្រាប្តូរប្រាក់ USD/KHR និងការកំណត់ជំនួយការ AI ។',
         'sec_general' => 'ព័ត៌មានលម្អិតហាង',
@@ -100,14 +107,18 @@ $tr = $t[$lang];
 
 // Handle Theme Mode Toggle
 if (isset($_POST['toggle_theme'])) {
-    $_SESSION['theme'] = $_SESSION['theme'] === 'dark' ? 'light' : 'dark';
+    $_SESSION['theme'] = (($_SESSION['theme'] ?? 'light') === 'dark') ? 'light' : 'dark';
     header("Location: admin.php?tab=" . ($_GET['tab'] ?? 'menu'));
     exit;
 }
 $current_theme = $_SESSION['theme'] ?? 'light';
 
-// View Mode on Login Page ('login' or 'reset')
+// View Mode on Auth Page ('login', 'request_reset', 'process_reset')
 $auth_view = $_GET['view'] ?? 'login';
+if (isset($_GET['reset_token'])) {
+    $auth_view = 'process_reset';
+}
+
 $login_error = '';
 $reset_msg = '';
 
@@ -117,12 +128,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $pass = $_POST['password'];
 
     try {
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
-        $stmt->execute([$user]);
+        $stmt = $pdo->prepare("SELECT * FROM public.users WHERE username = ? OR email = ?");
+        $stmt->execute([$user, $user]);
         $account = $stmt->fetch();
 
         if ($account) {
-            $stored_pass = $account['password'] ?? $account['password_hash'] ?? '';
+            $stored_pass = $account['password_hash'] ?? $account['password'] ?? '';
             if ($pass === $stored_pass || password_verify($pass, $stored_pass)) {
                 $_SESSION['admin_logged'] = true;
                 $_SESSION['username'] = $account['username'];
@@ -137,28 +148,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Handle Password Reset Action
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'reset_password') {
-    $user = trim($_POST['username']);
-    $new_pass = password_hash($_POST['new_password'], PASSWORD_DEFAULT);
-
+// Request Password Reset
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'forgot_password') {
+    $email = trim($_POST['email']);
+    
     try {
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
-        $stmt->execute([$user]);
-        $exists = $stmt->fetch();
-
-        if ($exists) {
-            $upd = $pdo->prepare("UPDATE users SET password = ?, password_hash = ? WHERE username = ?");
-            $upd->execute([$new_pass, $new_pass, $user]);
-            $reset_msg = "Password updated successfully! You can now log in.";
-            $auth_view = 'login';
+        $stmt = $pdo->prepare("SELECT id FROM public.users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
+        
+        if ($user) {
+            $token = bin2hex(random_bytes(32));
+            $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
+            
+            $updateStmt = $pdo->prepare("UPDATE public.users SET reset_token = ?, reset_token_expires = ? WHERE id = ?");
+            $updateStmt->execute([$token, $expires, $user['id']]);
+            
+            $reset_link = "admin.php?reset_token=" . $token;
+            $reset_msg = "Reset token generated! <a href='{$reset_link}' class='underline font-bold text-caramel'>Click here to set new password</a>";
         } else {
-            $login_error = "Username not found in database!";
-            $auth_view = 'reset';
+            $login_error = "Email address not found!";
         }
     } catch (Exception $e) {
-        $login_error = "Error updating password: " . $e->getMessage();
-        $auth_view = 'reset';
+        $login_error = "Error processing request: " . $e->getMessage();
+    }
+}
+
+// Process Password Reset
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'reset_password') {
+    $token = $_POST['reset_token'];
+    $new_password = $_POST['new_password'];
+    
+    try {
+        $stmt = $pdo->prepare("SELECT id FROM public.users WHERE reset_token = ? AND reset_token_expires > NOW()");
+        $stmt->execute([$token]);
+        $user = $stmt->fetch();
+        
+        if ($user) {
+            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+            
+            $updateStmt = $pdo->prepare("UPDATE public.users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?");
+            $updateStmt->execute([$hashed_password, $user['id']]);
+            
+            $reset_msg = "Password reset successful! You can now log in.";
+            $auth_view = 'login';
+        } else {
+            $login_error = "Invalid or expired reset token!";
+        }
+    } catch (Exception $e) {
+        $login_error = "Reset error: " . $e->getMessage();
     }
 }
 
@@ -180,15 +218,16 @@ $user_msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create_user') {
     if (isset($_SESSION['admin_logged']) && $role === 'admin') {
         $new_user = trim($_POST['new_username']);
+        $new_email = trim($_POST['new_email'] ?? '');
         $new_pass = password_hash($_POST['new_password'], PASSWORD_DEFAULT);
         $new_role = $_POST['new_role'];
 
         try {
-            $stmt = $pdo->prepare("INSERT INTO users (username, password, password_hash, role) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$new_user, $new_pass, $new_pass, $new_role]);
+            $stmt = $pdo->prepare("INSERT INTO public.users (username, email, password_hash, role) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$new_user, $new_email, $new_pass, $new_role]);
             $user_msg = "User/Staff created successfully!";
         } catch (Exception $e) {
-            $user_msg = "Error: Username might already exist.";
+            $user_msg = "Error: Username or email might already exist.";
         }
     }
 }
@@ -239,7 +278,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 $settings_msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_settings') {
     if (isset($_SESSION['admin_logged'])) {
-        // You can save configuration settings here (e.g. into a settings table or session)
         $settings_msg = $tr['settings_success'];
     }
 }
@@ -249,11 +287,13 @@ $menu_items = [];
 $ai_docs = [];
 $users_list = [];
 if (isset($_SESSION['admin_logged'])) {
-    $menu_items = $pdo->query("SELECT * FROM menu_items ORDER BY id DESC")->fetchAll();
-    if ($role === 'admin') {
-        $ai_docs = $pdo->query("SELECT * FROM ai_knowledge_docs ORDER BY id DESC")->fetchAll();
-        $users_list = $pdo->query("SELECT id, username, role, created_at FROM users ORDER BY id DESC")->fetchAll();
-    }
+    try {
+        $menu_items = $pdo->query("SELECT * FROM menu_items ORDER BY id DESC")->fetchAll();
+        if ($role === 'admin') {
+            $ai_docs = $pdo->query("SELECT * FROM ai_knowledge_docs ORDER BY id DESC")->fetchAll();
+            $users_list = $pdo->query("SELECT id, username, email, role, created_at FROM public.users ORDER BY id DESC")->fetchAll();
+        }
+    } catch (Exception $e) {}
 }
 ?>
 <!DOCTYPE html>
@@ -296,7 +336,13 @@ if (isset($_SESSION['admin_logged'])) {
                 <div class="w-12 h-12 rounded-full bg-caramel/20 text-caramel flex items-center justify-center mx-auto mb-3">
                     <i class="fa-solid fa-lock text-xl"></i>
                 </div>
-                <h2 class="font-serif text-2xl font-bold"><?= $auth_view === 'reset' ? $tr['reset_title'] : $tr['login_title'] ?></h2>
+                <h2 class="font-serif text-2xl font-bold">
+                    <?php 
+                    if ($auth_view === 'request_reset') echo $tr['reset_title'];
+                    elseif ($auth_view === 'process_reset') echo $tr['reset_pass_title'];
+                    else echo $tr['login_title'];
+                    ?>
+                </h2>
                 <div class="flex justify-center gap-4 mt-2 text-xs">
                     <a href="admin.php?lang=en&view=<?= $auth_view ?>" class="underline font-semibold <?= $lang==='en'?'text-caramel':'' ?>">English</a>
                     <a href="admin.php?lang=kh&view=<?= $auth_view ?>" class="underline font-semibold <?= $lang==='kh'?'text-caramel':'' ?>">ភាសាខ្មែរ</a>
@@ -326,17 +372,31 @@ if (isset($_SESSION['admin_logged'])) {
                     <?= $tr['login_btn'] ?>
                 </button>
                 <div class="text-center pt-2">
-                    <a href="admin.php?view=reset&lang=<?= $lang ?>" class="text-xs text-caramel hover:underline font-semibold"><?= $tr['reset_link'] ?></a>
+                    <a href="admin.php?view=request_reset&lang=<?= $lang ?>" class="text-xs text-caramel hover:underline font-semibold"><?= $tr['reset_link'] ?></a>
                 </div>
             </form>
-            <?php else: ?>
-            <!-- Reset Password Form -->
+
+            <?php elseif ($auth_view === 'request_reset'): ?>
+            <!-- Request Reset Form -->
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="action" value="forgot_password">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-1"><?= $tr['email'] ?></label>
+                    <input type="email" name="email" required placeholder="admin@example.com" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 border border-caramel/20 text-sm focus:outline-none focus:border-caramel">
+                </div>
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-caramel hover:bg-opacity-90 text-white font-bold text-sm transition-colors shadow-md">
+                    <?= $tr['request_reset_btn'] ?>
+                </button>
+                <div class="text-center pt-2">
+                    <a href="admin.php?view=login&lang=<?= $lang ?>" class="text-xs text-caramel hover:underline font-semibold"><?= $tr['back_to_login'] ?></a>
+                </div>
+            </form>
+
+            <?php elseif ($auth_view === 'process_reset'): ?>
+            <!-- Process New Password Form -->
             <form method="POST" class="space-y-4">
                 <input type="hidden" name="action" value="reset_password">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider mb-1"><?= $tr['username'] ?></label>
-                    <input type="text" name="username" required class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 border border-caramel/20 text-sm focus:outline-none focus:border-caramel">
-                </div>
+                <input type="hidden" name="reset_token" value="<?= htmlspecialchars($_GET['reset_token'] ?? '') ?>">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider mb-1"><?= $tr['new_password'] ?></label>
                     <input type="password" name="new_password" required class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 border border-caramel/20 text-sm focus:outline-none focus:border-caramel">
@@ -438,7 +498,6 @@ if (isset($_SESSION['admin_logged'])) {
                     <div class="mb-4 p-3 bg-emerald-100 text-emerald-800 text-xs rounded-xl font-medium"><?= $ai_msg ?></div>
                 <?php endif; ?>
                 
-                <!-- Add AI Knowledge Form -->
                 <form method="POST" class="space-y-3 mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-2xl">
                     <input type="hidden" name="action" value="save_ai_doc">
                     <input type="text" name="title" placeholder="Document Title / Topic" required class="w-full px-3 py-2 rounded-xl border text-xs dark:bg-gray-700 dark:border-gray-600">
@@ -465,36 +524,39 @@ if (isset($_SESSION['admin_logged'])) {
                 <?php if ($user_msg): ?>
                     <div class="mb-4 p-3 bg-emerald-100 text-emerald-800 text-xs rounded-xl font-medium"><?= $user_msg ?></div>
                 <?php endif; ?>
-                <form method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-2xl">
+                <form method="POST" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-2xl">
                     <input type="hidden" name="action" value="create_user">
                     <input type="text" name="new_username" placeholder="Username" required class="px-3 py-2 rounded-xl border text-xs dark:bg-gray-700 dark:border-gray-600">
+                    <input type="email" name="new_email" placeholder="Email" class="px-3 py-2 rounded-xl border text-xs dark:bg-gray-700 dark:border-gray-600">
                     <input type="password" name="new_password" placeholder="Password" required class="px-3 py-2 rounded-xl border text-xs dark:bg-gray-700 dark:border-gray-600">
                     <select name="new_role" class="px-3 py-2 rounded-xl border text-xs dark:bg-gray-700 dark:border-gray-600">
                         <option value="staff">Staff</option>
                         <option value="admin">Admin</option>
                     </select>
-                    <button type="submit" class="sm:col-span-3 py-2.5 rounded-xl bg-caramel text-white font-bold text-xs"><?= $tr['add_user'] ?></button>
+                    <button type="submit" class="sm:col-span-2 md:col-span-4 py-2.5 rounded-xl bg-caramel text-white font-bold text-xs"><?= $tr['add_user'] ?></button>
                 </form>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
                         <tr class="border-b dark:border-gray-700 font-bold">
                             <th class="p-2">Username</th>
+                            <th class="p-2">Email</th>
                             <th class="p-2">Role</th>
                             <th class="p-2">Created At</th>
                         </tr>
                         <?php foreach($users_list as $u): ?>
                         <tr class="border-b dark:border-gray-700/50">
                             <td class="p-2 font-semibold"><?= htmlspecialchars($u['username']) ?></td>
+                            <td class="p-2"><?= htmlspecialchars($u['email'] ?? '—') ?></td>
                             <td class="p-2 uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-caramel/20 text-caramel inline-block"><?= htmlspecialchars($u['role']) ?></td>
-                            <td class="p-2"><?= htmlspecialchars($u['created_at']) ?></td>
+                            <td class="p-2"><?= htmlspecialchars($u['created_at'] ?? 'N/A') ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </table>
                 </div>
 
             <?php elseif ($active_tab === 'settings'): ?>
-                <!-- MODERN COOL SETTINGS TAB -->
+                <!-- SETTINGS TAB -->
                 <div class="mb-6">
                     <h3 class="font-serif text-2xl font-bold flex items-center gap-2">
                         <i class="fa-solid fa-sliders text-caramel"></i> <?= $tr['settings_header'] ?>
@@ -511,7 +573,6 @@ if (isset($_SESSION['admin_logged'])) {
                 <form method="POST" class="space-y-6">
                     <input type="hidden" name="action" value="save_settings">
 
-                    <!-- Section 1: General Profile -->
                     <div class="p-5 rounded-2xl bg-gray-50 dark:bg-gray-700/40 border border-caramel/10 space-y-4">
                         <h4 class="font-bold text-sm text-caramel flex items-center gap-2">
                             <i class="fa-solid fa-store"></i> <?= $tr['sec_general'] ?>
@@ -536,7 +597,6 @@ if (isset($_SESSION['admin_logged'])) {
                         </div>
                     </div>
 
-                    <!-- Section 2: Currency & Pricing -->
                     <div class="p-5 rounded-2xl bg-gray-50 dark:bg-gray-700/40 border border-caramel/10 space-y-4">
                         <h4 class="font-bold text-sm text-caramel flex items-center gap-2">
                             <i class="fa-solid fa-coins"></i> <?= $tr['sec_currency'] ?>
@@ -551,7 +611,6 @@ if (isset($_SESSION['admin_logged'])) {
                         </div>
                     </div>
 
-                    <!-- Section 3: AI Concierge Assistant Behavior -->
                     <div class="p-5 rounded-2xl bg-gray-50 dark:bg-gray-700/40 border border-caramel/10 space-y-4">
                         <h4 class="font-bold text-sm text-caramel flex items-center gap-2">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> <?= $tr['sec_ai'] ?>
@@ -559,22 +618,6 @@ if (isset($_SESSION['admin_logged'])) {
                         <div>
                             <label class="block text-[11px] font-bold uppercase tracking-wider mb-1 opacity-80"><?= $tr['ai_prompt'] ?></label>
                             <textarea name="ai_prompt" rows="3" class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-gray-800 border border-caramel/20 text-xs focus:outline-none focus:border-caramel font-medium leading-relaxed">You are the friendly AI barista assistant for Roast & Craft. Help customers find beverages, recommend seasonal specials, and provide accurate pricing in USD and KHR.</textarea>
-                        </div>
-                    </div>
-
-                    <!-- Section 4: System Information Badges -->
-                    <div class="p-5 rounded-2xl bg-gray-50 dark:bg-gray-700/40 border border-caramel/10 flex flex-wrap items-center justify-between gap-4 text-xs">
-                        <div class="space-y-1">
-                            <span class="opacity-70 block">Logged-in Profile Role</span>
-                            <span class="font-bold px-2.5 py-1 rounded-lg bg-caramel/20 text-caramel uppercase text-[10px]"><?= htmlspecialchars($role) ?></span>
-                        </div>
-                        <div class="space-y-1">
-                            <span class="opacity-70 block">Active Interface Theme</span>
-                            <span class="font-bold px-2.5 py-1 rounded-lg bg-latte/20 text-latte uppercase text-[10px]"><?= htmlspecialchars($current_theme) ?></span>
-                        </div>
-                        <div class="space-y-1">
-                            <span class="opacity-70 block">Active Language</span>
-                            <span class="font-bold px-2.5 py-1 rounded-lg bg-caramel/20 text-caramel uppercase text-[10px]"><?= strtoupper($lang) ?></span>
                         </div>
                     </div>
 
