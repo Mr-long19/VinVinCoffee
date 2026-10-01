@@ -1,9 +1,13 @@
 <?php
+// Force SSL mode for libpq on Vercel
+putenv("PGSSLMODE=require");
+$_ENV['PGSSLMODE'] = 'require';
+
 $host     = getenv('POSTGRES_HOST')     ?: 'dpg-dauu9b19fdbs73advpe0-a.virginia-postgres.render.com';
 $port     = getenv('POSTGRES_PORT')     ?: '5432';
 $dbname   = getenv('POSTGRES_DATABASE') ?: 'coffee_riom';
 $user     = getenv('POSTGRES_USER')     ?: 'coffee_riom_user';
-$password = getenv('POSTGRES_PASSWORD') ?: 'g3Hmf2rt9Y50LopE1BEWB9Yppd5oFO8P';
+$password = getenv('POSTGRES_PASSWORD') ?: 'g3Hmf2rt9Y50LopE1BEWB9Yppd5oF08P';
 
 $dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode=require";
 
