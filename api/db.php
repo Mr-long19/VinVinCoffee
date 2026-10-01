@@ -6,7 +6,7 @@ $dbname = getenv('POSTGRES_DATABASE') ?: getenv('DB_NAME')     ?: 'coffee_riom';
 $user = getenv('POSTGRES_USER')     ?: getenv('DB_USER')     ?: 'coffee_riom_user';
 $password = getenv('POSTGRES_PASSWORD') ?: getenv('DB_PASS')     ?: 'g3Hmf2rt9Y50LopE1BEWB9Yppd5oFO8P';
 
-$dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode=require";
+$dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode=require;sslhostname={$host}";
 
 try {
     $pdo = new PDO($dsn, $user, $password, [
