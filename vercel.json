@@ -1,12 +1,17 @@
 {
-  "rewrites": [
+  "functions": {
+    "api/*.php": {
+      "runtime": "vercel-php@0.6.0"
+    }
+  },
+  "routes": [
     {
-      "source": "/admin.php",
-      "destination": "/api/admin.php"
+      "src": "/admin.php",
+      "dest": "/api/admin.php"
     },
     {
-      "source": "/admin",
-      "destination": "/api/admin.php"
+      "src": "/admin",
+      "dest": "/api/admin.php"
     }
   ]
 }
